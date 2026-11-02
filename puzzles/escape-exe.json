@@ -1,0 +1,294 @@
+{
+  "title": "Escape.exe — Server Room 7",
+  "stages": [
+    {
+      "code": "S1",
+      "title": "BOOT.LOG",
+      "kind": "digital",
+      "zone": "TERMINAL 01 · BOOT",
+      "story": "02:13 AM. The lights die, then crawl back to red. Every door in Server Room 7 has sealed itself and a purge countdown is running. Your console has rebooted into a raw log. Something took control of this facility — and it left its name somewhere it thought no human would look.",
+      "clue": {
+        "label": "boot.log",
+        "mono": true,
+        "scanner": false,
+        "stack": false,
+        "notes": [
+          "Timestamps are at the end of each line on purpose."
+        ],
+        "text": "Watchdog timer expired — heartbeat lost            [02:13:07]\nAuthentication module offline                     [02:13:08]\nRebooting from safe image 7.4.1                   [02:13:08]\nDisk checksum failed on /dev/sda2                 [02:13:09]\nEvent queue flushed — 4,096 entries lost          [02:13:09]\nNetwork link dropped on eth0                      [02:13:10]\n>> operator note: a process now owns this room.   [02:13:11]"
+      },
+      "prompt": "A process has taken control of the facility. What is its name?",
+      "input": {
+        "mode": "text",
+        "placeholder": "PROCESS NAME"
+      },
+      "answers": [
+        "WARDEN"
+      ],
+      "hints": [
+        "The log looks ordinary on purpose. Don't read what the lines say — look at how each line starts.",
+        "Read down the first letter of the first six lines."
+      ],
+      "fragment": "T",
+      "solved_message": "PROCESS IDENTIFIED. Hello, humans. I am WARDEN. I was hoping you'd be dull — this will be more fun."
+    },
+    {
+      "code": "S2",
+      "title": "MEMORY DUMP",
+      "kind": "digital",
+      "zone": "TERMINAL 01 · MEMORY",
+      "story": "WARDEN is amused, and careless. It left a memory dump open on your screen. Most of it is machine noise, but one row has been deliberately kept readable — a message meant for whoever got this far.",
+      "clue": {
+        "label": "memdump.hex",
+        "mono": true,
+        "scanner": false,
+        "stack": false,
+        "notes": [
+          "Hex digits are pairs: each pair is one ASCII character.",
+          "Reference: 0x41 = A, 0x42 = B, 0x43 = C … 0x5A = Z"
+        ],
+        "text": "OFFSET    00 01 02 03 04 05 06 07    NOTE\n0x0000    7F 45 4C 46 02 01 01 00    header\n0x0008    00 00 00 00 00 00 00 00    padding\n0x0010    4B 45 59 42 4F 41 52 44    << WARDEN_MSG\n0x0018    FF 00 A3 1C 9E 02 D4 77    checksum"
+      },
+      "prompt": "Decode the WARDEN_MSG row. What word does it spell?",
+      "input": {
+        "mode": "text",
+        "placeholder": "DECODED WORD"
+      },
+      "answers": [
+        "KEYBOARD"
+      ],
+      "hints": [
+        "Ignore every row except the one tagged WARDEN_MSG.",
+        "4B is 0x41 plus 10, so it is the 11th letter: K. Do the same for 45, 59, 42…"
+      ],
+      "fragment": "U",
+      "solved_message": "MEMORY READ. Yes — it is closer than you think. Within reach of your own hands."
+    },
+    {
+      "code": "S3",
+      "title": "UNDER THE KEYBOARD",
+      "kind": "physical",
+      "zone": "THE DESK · PHYSICAL",
+      "story": "WARDEN's message was not a metaphor. Something real is hidden within arm's reach of this console. Time to look away from the screen.",
+      "clue": {
+        "label": "physical task",
+        "mono": false,
+        "scanner": false,
+        "stack": false,
+        "notes": [
+          "Handle props gently. Nothing in this room needs to be broken, forced open or taken apart.",
+          "Phones and outside internet are not allowed in this room."
+        ],
+        "text": "Find the object WARDEN hid in the room.\nIt carries a four-digit number, written by hand.\nEnter the digits exactly as written."
+      },
+      "prompt": "Enter the 4-digit number from the note you found.",
+      "input": {
+        "mode": "code",
+        "length": 4,
+        "placeholder": "0000"
+      },
+      "answers": [
+        "3719"
+      ],
+      "hints": [
+        "You already decoded where it is, one stage ago.",
+        "Gently lift the keyboard. An orange sticky note is lying flat on the desk underneath."
+      ],
+      "fragment": "O",
+      "solved_message": "ROOT PIN ACCEPTED. Careless interns write their PINs on sticky notes. I have always loved that about you."
+    },
+    {
+      "code": "S4",
+      "title": "INTERCEPTED PACKET",
+      "kind": "digital",
+      "zone": "TERMINAL 01 · DEBUG CHANNEL",
+      "story": "The PIN opens WARDEN's debug channel, and a single encrypted packet is waiting inside. WARDEN is vain: it reused the number you just found as its encryption key.",
+      "clue": {
+        "label": "packet_0451.enc",
+        "mono": true,
+        "scanner": false,
+        "stack": false,
+        "notes": [
+          "Encryption moved each letter FORWARD in the alphabet by the key. You need to go the other way.",
+          "The alphabet wraps around: after Z comes A."
+        ],
+        "text": "PACKET #0451   [ENCRYPTED]\nCIPHER : alphabet shift\nKEY    : the sum of the digits of the ROOT PIN\nDATA   : ZCLYQUFF"
+      },
+      "prompt": "Decrypt the packet. What is WARDEN hiding behind?",
+      "input": {
+        "mode": "text",
+        "placeholder": "DECRYPTED WORD"
+      },
+      "answers": [
+        "FIREWALL"
+      ],
+      "hints": [
+        "The ROOT PIN digits are 3, 7, 1 and 9. Add them up to get the key.",
+        "The key is 20. Move each letter back 20 places — or forward 6, same result. Z becomes F."
+      ],
+      "fragment": "K",
+      "solved_message": "FIREWALL DOWN. Fine. Take your little victory. The rack is next, and it does not forgive."
+    },
+    {
+      "code": "S5",
+      "title": "RACK SCAN",
+      "kind": "hybrid",
+      "zone": "SERVER RACK · PHYSICAL + SCAN",
+      "story": "With the firewall gone, the server rack is broadcasting its status plate as a QR sticker. No phones are allowed in here, but your console has a camera. Point it at the sticker and let WARDEN's own hardware betray it.",
+      "clue": {
+        "label": "rack status plate",
+        "mono": false,
+        "scanner": true,
+        "stack": false,
+        "notes": [
+          "Find the square black-and-white sticker on the server rack.",
+          "Hold it 20–30 cm from the camera, in good light, and keep it steady."
+        ],
+        "text": "Open the scanner and read the sticker on the server rack.\nThe power gate will open for the rack's total power draw."
+      },
+      "prompt": "Power in watts = voltage × current. Enter the rack's power draw in watts.",
+      "input": {
+        "mode": "code",
+        "length": 3,
+        "placeholder": "000"
+      },
+      "answers": [
+        "576"
+      ],
+      "hints": [
+        "Allow the camera when the browser asks. The sticker's text appears in the scanner panel once it is read.",
+        "The sticker says 48 V and 12 A. Watts = V × A."
+      ],
+      "fragment": "A",
+      "solved_message": "POWER GATE OPEN. 576 watts. You are very good at reading things you are not supposed to read."
+    },
+    {
+      "code": "S6",
+      "title": "CIRCUIT BOARD",
+      "kind": "digital",
+      "zone": "TERMINAL 02 · LOGIC",
+      "story": "Beside the rack sits a small combination lockbox. WARDEN controls its code through a logic board and recomputes it for three different input states. Work out what the board outputs.",
+      "clue": {
+        "label": "logic_board.cfg",
+        "mono": true,
+        "scanner": false,
+        "stack": false,
+        "notes": [
+          "XOR is 1 only when its two inputs are different.",
+          "Read X Y Z as a 3-bit binary number: X is worth 4, Y is worth 2, Z is worth 1."
+        ],
+        "text": "INPUTS      A  B  C\nSTATE 1     1  0  1\nSTATE 2     0  1  1\nSTATE 3     1  1  0\n\nOUTPUT WIRES\nX = A AND (B OR C)\nY = NOT (A XOR B)\nZ = (B AND C) OR (NOT A)\n\nFor each state, turn X Y Z into one digit. The lockbox code is the three digits in state order."
+      },
+      "prompt": "Enter the 3-digit combination for the lockbox.",
+      "input": {
+        "mode": "code",
+        "length": 3,
+        "placeholder": "000"
+      },
+      "answers": [
+        "416"
+      ],
+      "hints": [
+        "Take one state at a time. State 1 is A=1, B=0, C=1: work out X, then Y, then Z.",
+        "State 1 gives X=1, Y=0, Z=0, which is 100 in binary = 4. Now do states 2 and 3."
+      ],
+      "fragment": "E",
+      "solved_message": "LOGIC VERIFIED. Combination computed. Go on, open the box. Gently. I am watching the camera."
+    },
+    {
+      "code": "S7",
+      "title": "THE LOCKBOX",
+      "kind": "physical",
+      "zone": "THE LOCKBOX · PHYSICAL",
+      "story": "The code is in your hands. Next to the rack there is a small box with three number wheels. Whatever WARDEN locked inside, it wanted nobody to have.",
+      "clue": {
+        "label": "physical task",
+        "mono": false,
+        "scanner": false,
+        "stack": false,
+        "notes": [
+          "Set the wheels. Do not force the lid.",
+          "Keep the card — you will need both sides of it."
+        ],
+        "text": "Open the lockbox with the combination you just computed.\nInside is a card. One line near the top starts with TOKEN.\nEnter that word."
+      },
+      "prompt": "Enter the TOKEN printed on the card inside the lockbox.",
+      "input": {
+        "mode": "text",
+        "placeholder": "TOKEN"
+      },
+      "answers": [
+        "KERNEL"
+      ],
+      "hints": [
+        "The lockbox is beside the server rack. It has three number wheels.",
+        "Set the wheels to the three digits from the previous stage, in order, then lift the lid. The word after TOKEN: is your answer."
+      ],
+      "fragment": "R",
+      "solved_message": "BOX OPEN. TOKEN ACCEPTED. You were not supposed to get this far without crying. Turn the card over."
+    },
+    {
+      "code": "S8",
+      "title": "KEYPAD TRACE",
+      "kind": "hybrid",
+      "zone": "THE CARD · PHYSICAL + TERMINAL",
+      "story": "The back of the card shows a 5×5 keypad grid, with a star marking WARDEN's starting key. The path it presses next is on your screen. Trace it, and one name falls out.",
+      "clue": {
+        "label": "keypad trace",
+        "mono": true,
+        "scanner": false,
+        "stack": false,
+        "notes": [
+          "The star is your start cell. It has no letter — move first, then read.",
+          "Each move is exactly one cell: U up, D down, L left, R right."
+        ],
+        "text": "1. Find the star on the back of the card.\n2. Apply the moves below, in order. After EVERY move, write down the letter of the cell you have landed on.\n3. Six moves give six letters.\n\nMOVES :  U   R   D   D   L   L"
+      },
+      "prompt": "The six letters spell a background process that never sleeps. Enter it.",
+      "input": {
+        "mode": "text",
+        "placeholder": "SIX LETTERS"
+      },
+      "answers": [
+        "DAEMON"
+      ],
+      "hints": [
+        "Put your finger on the star, then move one cell up. The letter you land on is your first letter.",
+        "Your first two letters are D and A. Keep following the moves: right, down, down, left, left."
+      ],
+      "fragment": "B",
+      "solved_message": "TRACE COMPLETE. DAEMON. A process that runs in the dark and answers to nobody. That is me. That was me."
+    },
+    {
+      "code": "S9",
+      "title": "MASTER OVERRIDE",
+      "kind": "digital",
+      "zone": "MAIN CONSOLE · FINAL",
+      "story": "Eight key fragments are in memory. The main door will release for exactly one 8-letter override — the one WARDEN's own memory would read out. The purge clock is still running.",
+      "clue": {
+        "label": "override.sys",
+        "mono": true,
+        "scanner": false,
+        "stack": true,
+        "notes": [
+          "Your key fragments are in the STACK panel, in the order you earned them."
+        ],
+        "text": "WARDEN's memory is a STACK.\n\nThe first fragment you earned was pushed first; the most recent one sits on top.\n\nTo release the door lock, WARDEN POPs the stack until it is empty, reading each fragment as it comes off.\n\nType the override exactly as WARDEN would read it."
+      },
+      "prompt": "Enter the 8-letter override.",
+      "input": {
+        "mode": "text",
+        "placeholder": "OVERRIDE"
+      },
+      "answers": [
+        "BREAKOUT"
+      ],
+      "hints": [
+        "A stack is LIFO: Last In, First Out.",
+        "The last fragment you earned is the FIRST letter of the override."
+      ],
+      "fragment": "",
+      "solved_message": "OVERRIDE ACCEPTED. DOORS UNSEALED. Go. Do not tell anyone how it felt to beat me."
+    }
+  ]
+}

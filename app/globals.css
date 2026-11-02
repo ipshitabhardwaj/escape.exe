@@ -1,0 +1,315 @@
+@import "tailwindcss";
+
+/* Escape.exe Theme: Retro Escape Room Background with Red Lamp, Crimson Accents, and Noir Mystery */
+@theme {
+  --color-ink: #05070a;
+  --color-panel: #0d121c;
+  --color-panel2: #131a28;
+  --color-line: #222d40;
+  --color-muted: #8e9fb5;
+  --color-text: #f8fafc;
+  --color-accent: #e11d48;       /* Crimson / Ruby red spotlight beam */
+  --color-accent-hover: #f43f5e;
+  --color-cyan-glow: #0ea5e9;    /* Cool cyan spotlight */
+  --color-danger: #ef4444;       /* Alert red */
+  --color-ok: #10b981;           /* Solved emerald */
+  --color-info: #38bdf8;         /* Cyan hint */
+  --color-key: #fbbf24;          /* Glowing brass key */
+  --color-paper: #f6efe6;        /* Evidence paper tone */
+  --font-mono: ui-monospace, "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+  --font-type: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+html,
+body {
+  background: var(--color-ink);
+  color: var(--color-text);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  /* Escape Room Scene background with hanging red lamp from user image */
+  background-color: #05070a;
+  background-image: 
+    /* Dynamic overhead red lamp illumination focused at top-center */
+    radial-gradient(ellipse 700px 420px at 50% 5%, rgba(225, 29, 72, 0.42), transparent 75%),
+    /* Cool cyan spotlight accent on the side */
+    radial-gradient(circle 600px at 88% 22%, rgba(14, 165, 233, 0.16), transparent 70%),
+    /* Atmosphere gradient preserving the red lamp, TV, and room visual while ensuring text readability */
+    linear-gradient(to bottom, rgba(5, 7, 10, 0.40) 0%, rgba(5, 7, 10, 0.68) 25%, rgba(5, 7, 10, 0.88) 60%, rgba(5, 7, 10, 0.96) 100%),
+    url("/images/escape-room-bg.jpg");
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+.type {
+  letter-spacing: -0.018em;
+}
+
+::selection {
+  background: rgba(225, 29, 72, 0.4);
+  color: #ffffff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Thin red caution barrier stripe */
+.tape {
+  background: repeating-linear-gradient(-45deg, rgba(225, 29, 72, 0.9) 0 14px, #05070a 14px 28px);
+}
+
+/* Red String & Hazard containment ribbon */
+.crime-tape {
+  overflow: hidden;
+  white-space: nowrap;
+  background: linear-gradient(90deg, #9f1239, #e11d48, #0ea5e9, #e11d48, #9f1239);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  line-height: 28px;
+  text-transform: uppercase;
+  user-select: none;
+  border-block: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 25px rgba(225, 29, 72, 0.3);
+}
+
+/* Rubber stamp badge */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid currentColor;
+  border-radius: 9999px;
+  padding: 3px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  background: rgba(225, 29, 72, 0.12);
+  box-shadow: 0 0 14px rgba(225, 29, 72, 0.2);
+}
+
+/* Red stamp label */
+.stamp-box {
+  display: inline-block;
+  border: 2.5px solid #e11d48;
+  color: #e11d48;
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transform: rotate(-3deg);
+  background: rgba(225, 29, 72, 0.08);
+  box-shadow: 0 0 12px rgba(225, 29, 72, 0.25);
+}
+
+/* Clue & cipher card illuminated display with frosted dark backing */
+.exhibit {
+  background: linear-gradient(160deg, rgba(14, 19, 29, 0.88) 0%, rgba(18, 26, 38, 0.94) 100%);
+  color: #e2e8f0;
+  border-radius: 20px;
+  border: 1px solid rgba(225, 29, 72, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+/* Floating pill navbar style */
+.nav-pill-notch {
+  position: relative;
+  border-radius: 9999px;
+  background: rgba(12, 16, 24, 0.82);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.65);
+}
+
+/* Ultra-mindblowing animations */
+@keyframes lampPulse {
+  0%, 100% {
+    opacity: 0.85;
+    transform: scale(1);
+    filter: drop-shadow(0 0 35px rgba(225, 29, 72, 0.5));
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+    filter: drop-shadow(0 0 55px rgba(225, 29, 72, 0.8));
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(-150%);
+  }
+  100% {
+    transform: translateX(150%);
+  }
+}
+
+@keyframes redStringDash {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 40;
+  }
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(1000%);
+  }
+}
+
+.anim-lamp {
+  animation: lampPulse 4s ease-in-out infinite;
+}
+
+.anim-float {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+.anim-red-string {
+  stroke-dasharray: 6 4;
+  animation: redStringDash 20s linear infinite;
+}
+
+/* Shimmer overlay for buttons */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transform: translateX(-150%);
+  transition: transform 0.6s ease-in-out;
+}
+.btn-shimmer:hover::after {
+  animation: shimmerSweep 1s ease-in-out infinite;
+}
+
+/* Glass card depth */
+.glass-panel {
+  background: rgba(12, 17, 26, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-panel-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(225, 29, 72, 0.5);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7), 0 0 25px rgba(225, 29, 72, 0.25);
+}
+
+@media print {
+  html,
+  body {
+    background: white !important;
+    background-image: none !important;
+    color: black !important;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Escape.exe game screens (/play): console look and feedback animations
+   --------------------------------------------------------------------- */
+
+/* CRT console: faint scanlines + inner glow on the clue terminal */
+.crt {
+  position: relative;
+  box-shadow: inset 0 0 40px rgba(14, 165, 233, 0.08), 0 0 24px rgba(14, 165, 233, 0.06);
+}
+.crt::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
+  mix-blend-mode: overlay;
+}
+
+@keyframes shakeX {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-10px); }
+  35% { transform: translateX(9px); }
+  55% { transform: translateX(-6px); }
+  75% { transform: translateX(4px); }
+}
+.anim-shake { animation: shakeX 0.42s ease-in-out; }
+
+@keyframes caretBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.anim-caret { animation: caretBlink 1s steps(1) infinite; }
+
+@keyframes popIn {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.anim-pop { animation: popIn 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes pulseRing {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.55); }
+  50% { box-shadow: 0 0 0 8px rgba(225, 29, 72, 0); }
+}
+.anim-pulse-ring { animation: pulseRing 1.6s ease-out infinite; }
+
+@keyframes flickerRed {
+  0%, 100% { opacity: 1; }
+  45% { opacity: 1; }
+  50% { opacity: 0.55; }
+  55% { opacity: 1; }
+  80% { opacity: 0.8; }
+}
+.anim-flicker { animation: flickerRed 1.2s linear infinite; }
+
+@keyframes scanDown {
+  0% { top: 4%; }
+  50% { top: 94%; }
+  100% { top: 4%; }
+}
+.anim-scan { animation: scanDown 2.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-shake, .anim-pop, .anim-pulse-ring, .anim-flicker, .anim-scan, .anim-caret { animation: none; }
+}
+
+/* Inputs inside our own bordered boxes draw their own focus ring on the box. */
+.bare-input:focus-visible { outline: none; }

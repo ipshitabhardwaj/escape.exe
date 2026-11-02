@@ -1,0 +1,255 @@
+"use server";
+
+import { randomInt } from "node:crypto";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { UserError, runAction } from "@/lib/admin-action";
+import { requireRole } from "@/lib/auth";
+import { teamCodeToEmail } from "@/lib/constants";
+import { selectAll } from "@/lib/db";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+const PATH = "/admin/teams";
+
+const RowSchema = z.object({
+  /** optional: a chosen Team ID / PIN instead of the generated ones */
+  code: z.string().trim().max(20).optional().default(""),
+  pin: z.string().trim().max(20).optional().default(""),
+  name: z.string().trim().max(80),
+  institution: z.string().trim().max(120).optional().default(""),
+  email: z.string().trim().max(200).optional().default(""),
+  phone: z.string().trim().max(40).optional().default(""),
+  members: z.array(z.string().trim().max(80)).max(8).default([]),
+  source: z.record(z.string(), z.string().max(2000)).optional(),
+});
+export type ImportRow = z.input<typeof RowSchema>;
+
+export type ImportResult = {
+  created: { code: string; pin: string; name: string }[];
+  skipped: { name: string; reason: string }[]; // duplicates / blank: nothing to do
+  failed: { name: string; reason: string }[]; // real errors: needs attention
+};
+
+const newPin = () => String(randomInt(0, 1_000_000)).padStart(6, "0");
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+async function currentPhase() {
+  const db = createAdminClient();
+  const { data } = await db.from("event").select("phase").eq("id", 1).single();
+  return (data?.phase ?? "waiting") as string;
+}
+
+/**
+ * Create teams + logins. Called in chunks of ≤ 25 rows by the import screen so
+ * each server call stays short. Skips rows whose team name or leader email
+ * already exists (so re-uploading the same CSV is safe) and reports every row.
+ */
+export async function importTeams(rows: ImportRow[]): Promise<ImportResult> {
+  await requireRole("admin");
+  if (!Array.isArray(rows) || rows.length > 25) throw new Error("Send at most 25 rows per call.");
+  const db = createAdminClient();
+  const result: ImportResult = { created: [], skipped: [], failed: [] };
+
+  const existing = await selectAll<{ team_code: string; name: string; contact_email: string | null }>((a, b) =>
+    db.from("teams").select("team_code, name, contact_email").range(a, b),
+  );
+  const codes = new Set(existing.map((t) => t.team_code.toUpperCase()));
+  const names = new Set(existing.map((t) => t.name.trim().toLowerCase()));
+  const emails = new Set(existing.map((t) => t.contact_email?.trim().toLowerCase()).filter(Boolean));
+  let next = Math.max(0, ...existing.map((t) => Number(/^EXE-(\d+)$/.exec(t.team_code)?.[1] ?? 0))) + 1;
+
+  for (const raw of rows) {
+    const parsed = RowSchema.safeParse(raw);
+    if (!parsed.success) {
+      result.failed.push({ name: String((raw as { name?: unknown })?.name ?? "(unknown)").slice(0, 80), reason: parsed.error.issues[0]?.message ?? "Invalid row" });
+      continue;
+    }
+    const row = parsed.data;
+    const name = row.name.replace(/\s+/g, " ");
+    const email = row.email.toLowerCase() || null;
+    if (!name) {
+      result.skipped.push({ name: "(blank)", reason: "No team name" });
+      continue;
+    }
+    if (names.has(name.toLowerCase())) {
+      result.skipped.push({ name, reason: "Team name already exists" });
+      continue;
+    }
+    if (email && !EMAIL.test(email)) {
+      result.failed.push({ name, reason: `Invalid email “${email}”. Fix it in the sheet or add the team manually.` });
+      continue;
+    }
+    if (email && emails.has(email)) {
+      result.skipped.push({ name, reason: `Email ${email} already registered for another team` });
+      continue;
+    }
+
+    const wantCode = row.code.toUpperCase();
+    if (wantCode && !/^[A-Z0-9-]{3,20}$/.test(wantCode)) {
+      result.failed.push({ name, reason: `Team ID “${row.code}” must be 3–20 letters, digits or dashes.` });
+      continue;
+    }
+    if (wantCode && codes.has(wantCode)) {
+      result.skipped.push({ name, reason: `Team ID ${wantCode} already exists` });
+      continue;
+    }
+    const wantPin = row.pin.toUpperCase();
+    if (wantPin && !/^[A-Z0-9]{6,20}$/.test(wantPin)) {
+      result.failed.push({ name, reason: `PIN “${row.pin}” must be 6–20 letters or digits, no spaces (a spreadsheet may have dropped a leading 0).` });
+      continue;
+    }
+    while (!wantCode && codes.has(`EXE-${String(next).padStart(3, "0")}`)) next++;
+    const num = wantCode ? Number(/(\d+)$/.exec(wantCode)?.[1] ?? next) : next++;
+    const code = wantCode || `EXE-${String(num).padStart(3, "0")}`;
+    const pin = wantPin || newPin();
+    const members = row.members.filter(Boolean).map((m) => ({ name: m }));
+
+    const { data: team, error: teamErr } = await db
+      .from("teams")
+      .insert({
+        team_code: code,
+        name,
+        institution: row.institution || null,
+        contact_email: email,
+        contact_phone: row.phone || null,
+        members,
+        source_row: row.source ?? null,
+      })
+      .select("id")
+      .single();
+    if (teamErr) {
+      result.failed.push({ name, reason: teamErr.message });
+      continue;
+    }
+
+    const { data: auth, error: authErr } = await db.auth.admin.createUser({
+      email: teamCodeToEmail(code),
+      password: pin,
+      email_confirm: true,
+      app_metadata: { role: "team", team_id: team.id },
+    });
+    if (authErr || !auth.user) {
+      await db.from("teams").delete().eq("id", team.id);
+      result.failed.push({ name, reason: `Login not created: ${authErr?.message ?? "unknown error"}` });
+      continue;
+    }
+
+    const results = await Promise.all([
+      db.from("teams").update({ auth_user_id: auth.user.id }).eq("id", team.id),
+      db.from("team_credentials").insert({ team_id: team.id, pin }),
+      db.from("profiles").insert({ user_id: auth.user.id, role: "team", team_id: team.id, display_name: name }),
+    ]);
+    const bad = results.find((r) => r.error);
+    if (bad) {
+      await db.auth.admin.deleteUser(auth.user.id);
+      await db.from("teams").delete().eq("id", team.id);
+      result.failed.push({ name, reason: `Setup failed: ${bad.error!.message}` });
+      continue;
+    }
+
+    codes.add(code);
+    names.add(name.toLowerCase());
+    if (email) emails.add(email);
+    result.created.push({ code, pin, name });
+  }
+
+  revalidatePath("/admin", "layout");
+  return result;
+}
+
+/** Manual "Add team" form (on-the-spot registrations). */
+export async function addTeam(formData: FormData) {
+  await requireRole("admin");
+  await runAction(PATH, async () => {
+    const members = String(formData.get("members") ?? "").split(/[,\n]/);
+    const r = await importTeams([
+      {
+        name: String(formData.get("name") ?? ""),
+        institution: String(formData.get("institution") ?? ""),
+        email: String(formData.get("email") ?? ""),
+        phone: String(formData.get("phone") ?? ""),
+        members,
+      },
+    ]);
+    const problem = r.failed[0] ?? r.skipped[0];
+    if (problem) throw new UserError(`Not created: ${problem.reason}`);
+    const c = r.created[0];
+    return `Created ${c.code} “${c.name}”. PIN: ${c.pin}`;
+  });
+}
+
+export async function setCheckedIn(formData: FormData) {
+  await requireRole("admin");
+  await runAction(String(formData.get("back") || PATH), async () => {
+    const db = createAdminClient();
+    const value = formData.get("value") === "true";
+    const { data } = await db.from("teams").update({ checked_in: value }).eq("id", String(formData.get("teamId"))).select("team_code").single();
+    revalidatePath("/admin", "layout");
+    return `${data?.team_code ?? "Team"} ${value ? "checked in" : "check-in removed"}.`;
+  });
+}
+
+export async function resetPin(formData: FormData) {
+  await requireRole("admin");
+  await runAction(PATH, async () => {
+    const db = createAdminClient();
+    const teamId = String(formData.get("teamId"));
+    const { data: team } = await db.from("teams").select("team_code, auth_user_id").eq("id", teamId).single();
+    if (!team?.auth_user_id) throw new UserError("This team has no login.");
+    const pin = newPin();
+    const { error } = await db.auth.admin.updateUserById(team.auth_user_id, { password: pin });
+    if (error) throw new Error(error.message);
+    await db.from("team_credentials").upsert({ team_id: teamId, pin, updated_at: new Date().toISOString() });
+    await db.from("login_attempts").delete().eq("key", `team:${team.team_code}`);
+    revalidatePath("/admin", "layout");
+    return `New PIN for ${team.team_code}: ${pin}`;
+  });
+}
+
+async function deleteTeams(ids: string[]) {
+  const db = createAdminClient();
+  const teams = await selectAll<{ id: string; auth_user_id: string | null }>((a, b) =>
+    db.from("teams").select("id, auth_user_id").in("id", ids).range(a, b),
+  );
+  for (const t of teams) {
+    if (t.auth_user_id) await db.auth.admin.deleteUser(t.auth_user_id); // cascades to profile
+    await db.from("teams").delete().eq("id", t.id); // cascades to work, scores, PIN
+  }
+  return teams.length;
+}
+
+export async function deleteTeam(formData: FormData) {
+  await requireRole("admin");
+  await runAction(PATH, async () => {
+    if (String(formData.get("confirm")).trim() !== "DELETE") throw new UserError("Type DELETE to confirm.");
+    const n = await deleteTeams([String(formData.get("teamId"))]);
+    revalidatePath("/admin", "layout");
+    return n ? "Team, its login and all its work deleted." : "Team not found.";
+  });
+}
+
+export async function deleteDummyTeams(formData: FormData) {
+  await requireRole("admin");
+  await runAction(PATH, async () => {
+    if (String(formData.get("confirm")).trim() !== "DELETE") throw new UserError("Type DELETE to confirm.");
+    const db = createAdminClient();
+    const ids = (await selectAll<{ id: string }>((a, b) => db.from("teams").select("id").eq("is_dummy", true).range(a, b))).map((t) => t.id);
+    const n = await deleteTeams(ids);
+    revalidatePath("/admin", "layout");
+    return `Deleted ${n} dummy teams and their logins.`;
+  });
+}
+
+/** After a dry run with real-looking test teams: remove every team. Waiting phase only. */
+export async function deleteAllTeams(formData: FormData) {
+  await requireRole("admin");
+  await runAction(PATH, async () => {
+    if (String(formData.get("confirm")).trim() !== "DELETE ALL TEAMS") throw new UserError("Type DELETE ALL TEAMS to confirm.");
+    if ((await currentPhase()) !== "waiting") throw new UserError("Only possible while the event is in Waiting. Reset the event first.");
+    const db = createAdminClient();
+    const ids = (await selectAll<{ id: string }>((a, b) => db.from("teams").select("id").range(a, b))).map((t) => t.id);
+    const n = await deleteTeams(ids);
+    revalidatePath("/admin", "layout");
+    return `Deleted all ${n} teams and their logins. Puzzles and admins were kept.`;
+  });
+}

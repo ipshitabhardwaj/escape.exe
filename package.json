@@ -1,0 +1,42 @@
+{
+  "name": "escape-exe-platform",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "reset": "tsx --env-file=.env.local scripts/reset-event.ts",
+    "lint": "eslint .",
+    "validate:puzzles": "tsx scripts/validate-escape.ts",
+    "test:rank": "tsx scripts/test-rank.ts",
+    "test:rules": "tsx scripts/test-rules.ts",
+    "test": "npm run test:rank && npm run test:rules && npm run validate:puzzles",
+    "verify:prod": "tsx scripts/verify-production.ts"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
+    "jsqr": "^1.4.0",
+    "next": "^16.3.6",
+    "papaparse": "^5.7.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.6.3",
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.6",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}

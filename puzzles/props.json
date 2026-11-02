@@ -1,0 +1,12 @@
+{
+  "_about": "The physical side of Escape.exe. docs/escape-props.html is printed from these values, and scripts/validate-escape.ts checks that the puzzle answers still match them.",
+  "sticky_note": { "text": "ROOT PIN 3719", "colour": "orange", "where": "flat on the desk, under the keyboard" },
+  "qr_sticker": { "payload": "NEXUS-RACK-B | SUPPLY 48 V | DRAW 12 A | STATE LOCKED", "where": "on the front of the server rack" },
+  "lockbox": { "combination": "416", "reset_to": "000", "where": "on the shelf beside the rack" },
+  "card": {
+    "token": "KERNEL",
+    "grid": ["N F P C N", "K H W T D", "X T D A P", "N R * E A", "P N O M I"],
+    "star_row": 3,
+    "star_col": 2
+  }
+}
