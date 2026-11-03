@@ -5,16 +5,16 @@ export type AppRole = "admin" | "team";
  * The event moves through four phases (the database enum has older values
  * that are simply never used any more):
  *   waiting       doors sealed: teams can log in and read the briefing
- *   investigation LIVE: Game Masters start team slots, runs are timed
- *   closed        event over: running slots are stopped, scores are final
+ *   investigation LIVE: Game Master starts all teams together, runs are timed
+ *   closed        event over: running runs are stopped, scores are final
  *   results       the leaderboard is public on the projector and on team screens
  */
 export type EventPhase = "waiting" | "investigation" | "closed" | "results";
 
 export const PHASES: { id: EventPhase; label: string; teamMessage: string }[] = [
-  { id: "waiting", label: "Doors Sealed", teamMessage: "The event has not opened yet. Read the briefing and wait for your slot." },
-  { id: "investigation", label: "Event Live", teamMessage: "Slots are running. Your Game Master starts your clock when your slot begins." },
-  { id: "closed", label: "Event Closed", teamMessage: "All slots are over. Results will be announced soon." },
+  { id: "waiting", label: "Doors Sealed", teamMessage: "The event has not opened yet. Read the briefing and wait for the start." },
+  { id: "investigation", label: "Event Live", teamMessage: "The event is live. Every team starts together when the Game Master presses START." },
+  { id: "closed", label: "Event Closed", teamMessage: "The event is over. Results will be announced soon." },
   { id: "results", label: "Results Out", teamMessage: "The leaderboard is live. Thanks for playing!" },
 ];
 

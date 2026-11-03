@@ -107,22 +107,21 @@ export async function addRunMinutes(formData: FormData) {
   });
 }
 
-/** Free-text slot label ("10:30–11:15", "Slot 4") shown to the team and on the board. */
-export async function setSlot(formData: FormData) {
+/** START EVERYONE: every team that has not started gets its clock begun at the same instant. */
+export async function startAllRuns(formData: FormData) {
   await requireRole("admin");
   const back = backTo(formData, PATH);
   await runAction(back, async () => {
+    if (!confirmed(formData)) throw new UserError("Tick “sure” first: every team's clock starts now and cannot be taken back.");
     const db = createAdminClient();
-    const id = String(formData.get("teamId"));
-    const code = await teamCode(db, id);
-    const label = String(formData.get("slot") ?? "").trim().slice(0, 30);
-    const { data: run } = await db.from("escape_runs").select("team_id").eq("team_id", id).maybeSingle();
-    const res = run
-      ? await db.from("escape_runs").update({ slot_label: label, updated_at: new Date().toISOString() }).eq("team_id", id)
-      : await db.from("escape_runs").insert({ team_id: id, slot_label: label });
-    if (res.error) throw new Error(res.error.message);
+    const { data, error } = await db.rpc("escape_admin_start_all");
+    if (error) {
+      if (/NOT_LIVE/.test(error.message)) throw new UserError("The event is not Live. Open it in the Control tab first.");
+      if (/NO_STAGES/.test(error.message)) throw new UserError("No puzzles are loaded.");
+      throw new Error(error.message);
+    }
     revalidatePath("/admin", "layout");
-    return label ? `${code}: slot set to “${label}”.` : `${code}: slot cleared.`;
+    return `${data} team(s) started together. Their clocks are running.`;
   });
 }
 

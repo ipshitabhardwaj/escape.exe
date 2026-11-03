@@ -9,7 +9,6 @@ export default function Lobby({ state, teamName, teamCode, members }: { state: E
   const live = state.phase === "investigation";
   const closed = state.phase === "closed" || state.phase === "results";
   const rules = buildRules(state.config.duration_minutes, state.config.hint_penalty_seconds);
-  const slot = state.run?.slot_label;
 
   return (
     <div className="space-y-6">
@@ -30,7 +29,6 @@ export default function Lobby({ state, teamName, teamCode, members }: { state: E
           <span className="rounded-full border border-accent/40 bg-accent/10 px-3 py-1 font-mono text-xs font-bold text-accent">{teamCode}</span>
           <span className="font-mono text-sm font-bold text-white">{teamName}</span>
           {members.length > 0 && <span className="text-xs text-muted">{members.join(" · ")}</span>}
-          {slot && <span className="ml-auto rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 font-mono text-xs font-bold text-cyan-200">Slot {slot}</span>}
         </div>
       </section>
 
@@ -44,10 +42,10 @@ export default function Lobby({ state, teamName, teamCode, members }: { state: E
           </p>
           <p className="text-sm leading-relaxed text-slate-400">
             {closed
-              ? "Slots are over. Watch the big screen for the results."
+              ? "The event is over. Watch the big screen for the results."
               : live
-                ? `Your ${state.config.duration_minutes}:00 clock starts the moment your Game Master presses START. Keep this page open — it switches to your first clue by itself.`
-                : "Keep this page open. When the event goes live and it is your slot, your Game Master starts your clock and this page switches to your first clue."}
+                ? `Everyone starts together. Your ${state.config.duration_minutes}:00 clock begins the moment the Game Master presses START. Keep this page open — it switches to your first clue by itself.`
+                : "Keep this page open. When the Game Master starts the event, every team begins at the same moment and this page switches to your first clue."}
           </p>
           {!closed && (
             <p className="font-mono text-xs text-muted">
@@ -58,7 +56,7 @@ export default function Lobby({ state, teamName, teamCode, members }: { state: E
       </section>
 
       <section className="glass-panel rounded-2xl p-6 sm:p-8">
-        <p className="font-mono text-[11px] font-black uppercase tracking-[0.25em] text-accent">Rulebook · read before your slot</p>
+        <p className="font-mono text-[11px] font-black uppercase tracking-[0.25em] text-accent">Rulebook · read before the start</p>
         <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {rules.map((r, i) => (
             <li key={r.title} className="rounded-xl border border-white/10 bg-black/30 p-4">

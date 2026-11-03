@@ -102,7 +102,7 @@ export default function ScreenView({ initial, data }: { initial: EventRow | null
 
         {phase === "closed" && (
           <div className="flex flex-1 flex-col items-center justify-center gap-5 text-center">
-            <p className="font-mono text-sm font-black uppercase tracking-[0.5em] text-accent">All slots complete</p>
+            <p className="font-mono text-sm font-black uppercase tracking-[0.5em] text-accent">All runs complete</p>
             <h1 className="font-mono text-5xl font-black uppercase sm:text-7xl">Results coming up…</h1>
             <p className="text-xl text-slate-300">{ranked.filter((r) => r.status === "escaped").length} team(s) escaped Server Room 7.</p>
           </div>

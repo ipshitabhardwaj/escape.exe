@@ -29,7 +29,7 @@ export async function GET() {
   ]);
 
   const header = [
-    "rank", "team_code", "team", "institution", "members", "email", "phone", "slot", "result",
+    "rank", "team_code", "team", "institution", "members", "email", "phone", "result",
     "puzzles_cleared", "hints_used", "wrong_answers", "time_taken", "hint_penalty", "total_time", "total_seconds", "started_at", "finished_at",
   ];
   const lines = [header.join(",")];
@@ -37,7 +37,7 @@ export async function GET() {
     const t = teams.find((x) => x.id === r.team_id);
     lines.push(
       [
-        r.rank, r.team_code, r.name, r.institution, (t?.members ?? []).map((m) => m.name), t?.contact_email, t?.contact_phone, r.slot_label, r.status,
+        r.rank, r.team_code, r.name, r.institution, (t?.members ?? []).map((m) => m.name), t?.contact_email, t?.contact_phone, r.status,
         r.stages_cleared, r.hints_used, r.wrong_attempts, mmss(r.elapsed_seconds), mmss(r.penalty_seconds), mmss(r.total_seconds), r.total_seconds, r.started_at, r.finished_at,
       ].map(esc).join(","),
     );

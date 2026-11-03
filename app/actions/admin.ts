@@ -24,7 +24,7 @@ async function goToPhase(phase: EventPhase, expected: EventPhase) {
   const db = createAdminClient();
   if (idx(phase) >= idx("closed")) {
     const { error } = await db.rpc("escape_admin_close_runs");
-    if (error) throw new Error(`Stopping the running slots failed: ${error.message}`);
+    if (error) throw new Error(`Stopping the running teams failed: ${error.message}`);
   }
   // Only if nobody else changed the phase meanwhile (two organisers clicking at once).
   const { data: moved, error } = await db
@@ -74,7 +74,7 @@ export async function setPhase(formData: FormData) {
 
     await goToPhase(phase, current);
     revalidatePath("/admin", "layout");
-    const stopped = idx(phase) >= idx("closed") && current === "investigation" && running ? ` ${running} running slot(s) were stopped.` : "";
+    const stopped = idx(phase) >= idx("closed") && current === "investigation" && running ? ` ${running} running team(s) were stopped.` : "";
     return `Phase is now “${phaseInfo(phase).label}”.${stopped}`;
   });
 }
@@ -96,7 +96,7 @@ export async function saveConfig(formData: FormData) {
       .eq("id", 1);
     if (error) throw new Error(error.message);
     revalidatePath("/admin", "layout");
-    return `Saved: ${minutes} minutes per slot, each hint costs ${penaltyMin} minute(s).`;
+    return `Saved: ${minutes} minutes per team, each hint costs ${penaltyMin} minute(s).`;
   });
 }
 

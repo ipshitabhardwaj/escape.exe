@@ -11,7 +11,7 @@ const TABS = [
   { href: "/admin/puzzles", label: "2 Puzzles" },
   { href: "/admin/teams", label: "3 Teams" },
   { href: "/admin/control", label: "4 Control" },
-  { href: "/admin/live", label: "5 Live slots" },
+  { href: "/admin/live", label: "5 Live" },
   { href: "/admin/results", label: "6 Results" },
 ];
 

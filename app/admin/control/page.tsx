@@ -11,15 +11,15 @@ import { ui } from "@/lib/ui";
 export const dynamic = "force-dynamic";
 
 const STEPS: { phase: EventPhase; title: string; detail: string }[] = [
-  { phase: "investigation", title: "Open the event (Live)", detail: "Teams can now be started from Live slots. Each team's own clock begins only when you press START for it." },
-  { phase: "closed", title: "Close the event", detail: "Ends the day. Any slot still running is stopped and counts as “did not escape”. Scores are final." },
+  { phase: "investigation", title: "Open the event (Live)", detail: "Teams can now be started. Nothing runs until you press START ALL on the Live tab: then every team's clock begins together." },
+  { phase: "closed", title: "Close the event", detail: "Ends the day. Any run still going is stopped and counts as “did not escape”. Scores are final." },
   { phase: "results", title: "Reveal results", detail: "The leaderboard appears on the big screen and on every team's screen." },
 ];
 
 const DURING: Record<EventPhase, string> = {
   waiting: "Set the clock and hint rules, check teams in, build the room. When the first team is seated, open the event.",
-  investigation: "Start each team on the Live slots tab when it is inside the room, one slot at a time. Close the event after the last slot.",
-  closed: "All slots are over. Check the Results tab, export the CSV, then reveal the results.",
+  investigation: "When everyone is seated, press START ALL on the Live tab. Every team has 45 minutes from that moment. Close the event when the time is up.",
+  closed: "Time is up for everyone. Check the Results tab, export the CSV, then reveal the results.",
   results: "Results are public. Export the CSV from Results and keep it safe.",
 };
 
@@ -37,7 +37,7 @@ export default async function ControlPage() {
   return (
     <div className="space-y-6">
       <AutoRefresh seconds={15} />
-      <PageHeader kicker="Run the event" title="Control" description="Four phases, one step at a time. Each team's own 45-minute clock is started separately on the Live slots tab." />
+      <PageHeader kicker="Run the event" title="Control" description="Four phases, one step at a time. All teams start together with START ALL on the Live tab." />
 
       <section className="rounded-2xl border border-line bg-panel p-6" aria-label="Now">
         <div className="flex flex-wrap items-start gap-6">
@@ -88,7 +88,7 @@ export default async function ControlPage() {
           <p className="mt-1 text-sm text-muted">The same for every team. Locked as soon as the event goes Live, so no one plays under different rules.</p>
           <form action={saveConfig} className="mt-4 flex flex-wrap items-end gap-4">
             <label className="text-sm">
-              <span className={ui.label}>Minutes per team slot</span>
+              <span className={ui.label}>Minutes per team</span>
               <input name="duration_minutes" type="number" min={5} max={240} defaultValue={cfg.duration_minutes} className={`${ui.input} w-28`} />
             </label>
             <label className="text-sm">

@@ -1,7 +1,7 @@
 import AutoRefresh from "@/components/admin/AutoRefresh";
 import RunClock from "@/components/admin/RunClock";
 import { PageHeader, Stat } from "@/components/ui";
-import { addRunMinutes, resetRun, setSlot, skipStage, startRun, stopRun } from "@/app/actions/admin-escape";
+import { addRunMinutes, resetRun, skipStage, startAllRuns, startRun, stopRun } from "@/app/actions/admin-escape";
 import { getRankedBoard } from "@/lib/escape/board";
 import { mmss } from "@/lib/escape/format";
 import type { BoardRow } from "@/lib/escape/types";
@@ -36,13 +36,6 @@ function Row({ t, total, live, now }: { t: BoardRow; total: number; live: boolea
   );
   return (
     <tr className="border-t border-line align-top">
-      <td className={ui.td}>
-        <form action={setSlot} className="flex gap-1">
-          {hidden}
-          <input name="slot" defaultValue={t.slot_label} placeholder="slot" aria-label={`Slot for ${t.team_code}`} className={`${ui.input} w-24 py-1 text-xs`} />
-          <button className="text-xs text-muted hover:text-text">Set</button>
-        </form>
-      </td>
       <td className={ui.td}>
         <div className="font-medium">{t.name}</div>
         <div className="font-mono text-xs text-muted">
@@ -144,7 +137,6 @@ function Table({ rows, total, live, now, empty }: { rows: BoardRow[]; total: num
       <table className="w-full text-sm">
         <thead className="text-muted">
           <tr>
-            <th className={ui.th}>Slot</th>
             <th className={ui.th}>Team</th>
             <th className={ui.th}>State</th>
             <th className={ui.th}>Puzzles</th>
@@ -160,7 +152,7 @@ function Table({ rows, total, live, now, empty }: { rows: BoardRow[]; total: num
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={8} className="px-4 py-6 text-center text-muted">
+              <td colSpan={7} className="px-4 py-6 text-center text-muted">
                 {empty}
               </td>
             </tr>
@@ -179,9 +171,9 @@ export default async function LivePage() {
   const real = board.filter((t) => !t.is_dummy);
   const rows = real.length ? real : board;
 
-  const bySlot = (a: BoardRow, b: BoardRow) => (a.slot_label || "~").localeCompare(b.slot_label || "~", undefined, { numeric: true }) || a.team_code.localeCompare(b.team_code);
-  const running = rows.filter((t) => t.status === "running").sort(bySlot);
-  const waiting = rows.filter((t) => t.status === "ready").sort(bySlot);
+  const byCode = (a: BoardRow, b: BoardRow) => a.team_code.localeCompare(b.team_code);
+  const running = rows.filter((t) => t.status === "running").sort(byCode);
+  const waiting = rows.filter((t) => t.status === "ready").sort(byCode);
   const done = rows.filter((t) => ["escaped", "timeout", "stopped"].includes(t.status)).sort((a, b) => Date.parse(b.finished_at ?? "") - Date.parse(a.finished_at ?? ""));
 
   return (
@@ -189,27 +181,48 @@ export default async function LivePage() {
       <AutoRefresh seconds={5} />
       <PageHeader
         kicker="During the event"
-        title="Live slots"
+        title="Live"
         description={
           live
-            ? "Press START when a team is seated in the room. Their clock begins that second and the first clue appears on their screen."
+            ? "Press START ALL when everyone is seated. Every team's clock begins that second and the first clue appears on every screen."
             : "The event is not Live, so teams cannot be started. Open it on the Control tab."
         }
       />
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label="In the room" value={running.length} tone={running.length ? "info" : undefined} />
-        <Stat label="Waiting" value={waiting.length} note={`${waiting.filter((t) => t.slot_label).length} with a slot`} />
+        <Stat label="Waiting" value={waiting.length} note="not started yet" />
         <Stat label="Finished" value={done.length} note={`${done.filter((t) => t.status === "escaped").length} escaped`} tone="ok" />
         <Stat label="Hint penalty" value={`${rows.reduce((n, t) => n + t.hints_used, 0)} hints`} note="across all teams" />
       </section>
 
+      {waiting.length > 0 && (
+        <section className="rounded-xl border border-accent/50 bg-accent/10 p-5">
+          <form action={startAllRuns} className="flex flex-wrap items-center gap-4">
+            <input type="hidden" name="back" value="/admin/live" />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold">Start everyone together</h2>
+              <p className="text-sm text-muted">
+                {live ? `${waiting.length} team(s) have not started. One press begins all their clocks at the same second.` : "Open the event on the Control tab first."}
+              </p>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="confirm" /> sure
+            </label>
+            <button disabled={!live} className={`${ui.btnLg} disabled:cursor-not-allowed`}>
+              ▶ START ALL ({waiting.length})
+            </button>
+          </form>
+          <p className="mt-2 text-xs text-muted">A team that arrives late can still be started on its own with the START button below.</p>
+        </section>
+      )}
+
       <section className="space-y-2">
-        <h2 className="font-semibold">In the room now</h2>
+        <h2 className="font-semibold">Playing now</h2>
         <Table rows={running} total={total} live={live} now={now} empty="Nobody is playing right now." />
       </section>
       <section className="space-y-2">
-        <h2 className="font-semibold">Waiting for their slot ({waiting.length})</h2>
-        <Table rows={waiting} total={total} live={live} now={now} empty="Everyone has played." />
+        <h2 className="font-semibold">Not started ({waiting.length})</h2>
+        <Table rows={waiting} total={total} live={live} now={now} empty="Everyone has started." />
       </section>
       <section className="space-y-2">
         <h2 className="font-semibold">Finished ({done.length})</h2>

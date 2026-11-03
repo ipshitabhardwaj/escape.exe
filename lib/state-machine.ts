@@ -7,7 +7,7 @@ import type { EventPhase } from "./constants";
  *   waiting ⇄ investigation (LIVE) ⇄ closed ⇄ results
  *
  * Each team's own 45-minute clock is separate from this: it starts when a
- * Game Master starts that team's slot while the event is LIVE.
+ * Game Master starts all teams together (START ALL) while the event is LIVE.
  * Going back is possible only to the immediately previous phase, only with
  * the word BACK. It never restarts a run that has already ended.
  */

@@ -37,7 +37,7 @@ export default async function AdminHome() {
     { ok: real.length > 0, label: "Real teams imported", detail: `${real.length} real team(s)`, href: "/admin/teams" },
     { ok: dummy === 0, label: "Dummy teams deleted", detail: dummy ? `${dummy} dummy team(s) left` : "OK", href: "/admin/teams" },
     { ok: board.length > 0 && n((t) => !t.has_login) === 0, label: "Every team has a login", detail: `${n((t) => !t.has_login)} without login`, href: "/admin/teams" },
-    { ok: true, label: "Clock and hint rules", detail: `${cfg.duration_minutes} min per slot · each hint +${minSec(cfg.hint_penalty_seconds)} (change in Control while Doors Sealed)`, href: "/admin/control" },
+    { ok: true, label: "Clock and hint rules", detail: `${cfg.duration_minutes} min per team · each hint +${minSec(cfg.hint_penalty_seconds)} (change in Control while Doors Sealed)`, href: "/admin/control" },
     {
       ok: capOk,
       label: "Login capacity confirmed",
@@ -92,7 +92,7 @@ export default async function AdminHome() {
         <Stat label="Teams" value={board.length} note={`${n((t) => t.checked_in)} checked in`} href="/admin/teams" />
         <Stat label="In the room now" value={n((t) => t.status === "running")} note="clock running" href="/admin/live" />
         <Stat label="Escaped" value={n((t) => t.status === "escaped")} note={`${n((t) => t.status === "timeout" || t.status === "stopped")} did not`} href="/admin/results" />
-        <Stat label="Still to play" value={n((t) => t.status === "ready")} note={`${n((t) => !!t.slot_label && t.status === "ready")} have a slot`} href="/admin/live" />
+        <Stat label="Still to play" value={n((t) => t.status === "ready")} note="not started yet" href="/admin/live" />
       </section>
 
       <details className="rounded-xl border border-line bg-panel">

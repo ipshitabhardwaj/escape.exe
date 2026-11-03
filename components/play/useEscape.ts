@@ -56,7 +56,8 @@ export function useEscape(initial: EscapeState | null) {
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
-    const base = status === "running" ? 5000 : status === "ready" ? 6000 : 20000;
+    // Gentle on the server (80+ teams at once), but quick to notice START ALL.
+    const base = status === "running" ? 8000 : status === "ready" ? (state?.phase === "investigation" ? 3000 : 12000) : 20000;
     const loop = async () => {
       await refresh();
       if (!cancelled) timer = setTimeout(loop, base * (0.8 + Math.random() * 0.4));
@@ -76,7 +77,7 @@ export function useEscape(initial: EscapeState | null) {
       document.removeEventListener("visibilitychange", wake);
       window.removeEventListener("online", wake);
     };
-  }, [refresh, status]);
+  }, [refresh, status, state?.phase]);
 
   return { state, offsetMs, online, authLost, refresh };
 }

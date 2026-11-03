@@ -18,7 +18,7 @@ export default async function ResultsPage() {
       <main className="mx-auto max-w-3xl px-4 py-16 text-center">
         <p className="font-mono text-[11px] font-black uppercase tracking-[0.3em] text-accent">Results are sealed</p>
         <h1 className="mt-3 font-mono text-3xl font-black uppercase text-white">Not announced yet</h1>
-        <p className="mt-3 text-slate-400">The Game Masters reveal the leaderboard when every slot is over. Watch the big screen.</p>
+        <p className="mt-3 text-slate-400">The Game Masters reveal the leaderboard when every team has finished. Watch the big screen.</p>
         <Link href="/play" className="mt-6 inline-flex rounded-full border border-white/15 px-5 py-2 font-mono text-sm font-bold text-muted hover:text-white">
           ← Back to my run
         </Link>
